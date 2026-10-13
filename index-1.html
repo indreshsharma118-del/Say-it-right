@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Say It Right</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Figtree:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eef0f7;--ink:#1b1b3a;--mut:#5b5f7a;--card:#fff;--acc:#4338ca;--onacc:#fff;--hi:#ffd23f;--onhi:#1b1b3a;--ok:#0f7b5f;--bad:#b4232a;--line:#d9dcec;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12132a;--ink:#ecedfa;--mut:#a4a8c8;--card:#1c1e3d;--acc:#9aa0ff;--onacc:#12132a;--ok:#4fd1a5;--bad:#ff8a8f;--line:#2d3060}}
+:root[data-theme="dark"]{--bg:#12132a;--ink:#ecedfa;--mut:#a4a8c8;--card:#1c1e3d;--acc:#9aa0ff;--onacc:#12132a;--ok:#4fd1a5;--bad:#ff8a8f;--line:#2d3060}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Figtree,system-ui,sans-serif}
+main{max-width:560px;margin:0 auto;padding:12px 16px 40px}
+h1,.big{font-family:"Bricolage Grotesque",Georgia,sans-serif}
+header{display:flex;justify-content:space-between;align-items:center;padding:8px 0}
+h1{font-size:1.3rem;margin:0}
+nav{display:flex;gap:4px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:4px;margin:8px 0 16px;position:sticky;top:env(safe-area-inset-top,0px);z-index:2}
+button{font:inherit;color:inherit;cursor:pointer}
+nav button{flex:1;border:0;background:none;padding:10px 4px;border-radius:9px;font-weight:600;color:var(--mut)}
+nav button[aria-selected=true]{background:var(--acc);color:var(--onacc)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--acc);outline-offset:2px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:14px}
+.lbl{color:var(--mut);font-size:.9rem;margin:0 0 4px}
+.big{font-size:clamp(2.6rem,13vw,4.2rem);font-weight:800;line-height:1.05;margin:4px 0;overflow-wrap:anywhere}
+.ipa{font-size:1.2rem;color:var(--mut)}
+.say{font-size:1.5rem;font-weight:600;margin:14px 0;display:flex;flex-wrap:wrap;gap:2px 10px}
+.st{background:var(--hi);color:var(--onhi);padding:0 8px;border-radius:6px;font-weight:800}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.btn{border:1px solid var(--line);background:var(--card);padding:10px 14px;border-radius:10px;font-weight:600}
+.btn.p{background:var(--acc);color:var(--onacc);border-color:var(--acc)}
+.btn.rec{background:var(--bad);color:#fff;border-color:var(--bad)}
+.tip{border-left:4px solid var(--acc);padding-left:12px;margin:14px 0 0}
+.res{margin-top:12px;min-height:1.5em;font-weight:600}
+.ok{color:var(--ok)}.bad{color:var(--bad)}
+input[type=search]{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:inherit;margin-bottom:12px}
+.item{display:flex;align-items:center;gap:10px;padding:12px 4px;border-bottom:1px solid var(--line)}
+.item .w{flex:1;text-align:left;background:none;border:0;padding:0}
+.item b{font-size:1.1rem}
+.star{border:0;background:none;font-size:1.4rem;color:var(--mut)}
+.star.on{color:#e0a800}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.opts .btn{padding:14px}
+.score{color:var(--mut);margin:0 0 8px}
+.sel{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:8px;font:inherit}
+@media (prefers-reduced-motion:no-preference){.btn{transition:transform .1s}.btn:active{transform:scale(.97)}}
+</style>
+</head>
+<body>
+<main>
+<header><h1>Say It Right</h1>
+<select id="acc" class="sel" aria-label="Accent"><option value="en-US">US accent</option><option value="en-GB">UK accent</option></select></header>
+<nav role="tablist"><button data-tab="today">Today</button><button data-tab="any">Any word</button><button data-tab="lib">Library</button><button data-tab="prac">Practice</button></nav>
+<div id="view"></div>
+</main>
+<script>
+const W=[
+["Wednesday","/ˈwenzdeɪ/","WENZ-day","The first “d” is silent."],
+["Choir","/ˈkwaɪər/","KWY-er","“Ch” sounds like “kw”."],
+["Colonel","/ˈkɜːrnəl/","KUR-nul","Spelled with an “l” but pronounced with an “r”."],
+["Worcestershire","/ˈwʊstərʃər/","WUUS-ter-sher","Most letters are skipped: wuus-ter-sher."],
+["Quinoa","/ˈkiːnwɑː/","KEEN-wah","Not “kwin-OH-ah”."],
+["Pronunciation","/prəˌnʌnsiˈeɪʃən/","pruh-NUN-see-AY-shun","Not “pro-NOUNCE”. The second syllable is “nun”."],
+["Epitome","/ɪˈpɪtəmi/","ih-PIT-uh-mee","Four syllables; the final “e” is said."],
+["Hyperbole","/haɪˈpɜːrbəli/","hy-PUR-buh-lee","Not “hyper-bowl”."],
+["Anemone","/əˈneməni/","uh-NEM-uh-nee","Ends with “nee”, not “nown”."],
+["Thoroughly","/ˈθʌrəli/","THUR-uh-lee","“Ough” sounds like “uh”."],
+["Island","/ˈaɪlənd/","EYE-lund","The “s” is silent."],
+["Subtle","/ˈsʌtl/","SUT-ul","The “b” is silent."],
+["Specific","/spəˈsɪfɪk/","spuh-SIF-ik","Not “pacific”. Start with “sp”."],
+["Library","/ˈlaɪbreri/","LY-brer-ee","Say both “r” sounds: not “lie-berry”."],
+["Comfortable","/ˈkʌmftərbəl/","KUMF-ter-bul","Usually three syllables, not four."],
+["Vegetable","/ˈvedʒtəbəl/","VEJ-tuh-bul","Three syllables: veg-tuh-bul."],
+["Genre","/ˈʒɑːnrə/","ZHAHN-ruh","French word: starts with a “zh” sound."],
+["Mischievous","/ˈmɪstʃɪvəs/","MIS-chih-vus","Three syllables, not “mis-CHEE-vee-us”."],
+["Rendezvous","/ˈrɒndeɪvuː/","RON-day-voo","The final “s” and “z” are silent."],
+["Squirrel","/ˈskwɜːrəl/","SKWUR-ul","One strong syllable plus a quick “ul”."],
+["Entrepreneur","/ˌɒntrəprəˈnɜːr/","on-truh-pruh-NUR","French origin: starts with “on”."],
+["Hierarchy","/ˈhaɪərɑːrki/","HY-uh-rar-kee","Starts like “higher”."],
+["Phenomenon","/fɪˈnɑːmɪnɑːn/","fih-NOM-ih-non","Stress the second syllable."],
+["Facade","/fəˈsɑːd/","fuh-SAHD","The “ç” is an “s”: fuh-sahd."],
+["Sixth","/sɪksθ/","SIKSTH","Finish with your tongue between your teeth."],
+["Rural","/ˈrʊrəl/","ROOR-ul","Two “r” sounds close together. Go slowly."],
+["Awry","/əˈraɪ/","uh-RY","Rhymes with “try”."],
+["Particularly","/pərˈtɪkjələrli/","per-TIK-yuh-ler-lee","Five syllables. Don’t drop the “ic”."]
+];
+const BASE=W.length;
+try{JSON.parse(localStorage.getItem("custom")||"[]").forEach(c=>{if(Array.isArray(c)&&c.length===4)W.push(c)})}catch(e){}
+const saveCustom=()=>{try{localStorage.setItem("custom",JSON.stringify(W.slice(BASE)))}catch(e){}};
+const $=s=>document.querySelector(s);
+let wotd=null,wBusy=false,anyWord="",look=null,busy=false,errMsg="";
+let tab="today",sel=0,fav=new Set(),q="",quiz=null,score=0,total=0,mem={};
+try{fav=new Set(JSON.parse(localStorage.getItem("fav")||"[]"))}catch(e){}
+const saveFav=()=>{try{localStorage.setItem("fav",JSON.stringify([...fav]))}catch(e){}};
+const dayIdx=()=>Math.floor((Date.now()-new Date().getTimezoneOffset()*6e4)/864e5)%BASE;
+const accent=()=>$("#acc").value;
+
+function speak(t,rate=.9){
+ if(!("speechSynthesis" in window)){return false}
+ try{
+ speechSynthesis.cancel();
+ const u=new SpeechSynthesisUtterance(t);u.lang=accent();u.rate=rate;
+ const v=speechSynthesis.getVoices().find(v=>v.lang.replace("_","-")===accent());if(v)u.voice=v;
+ speechSynthesis.speak(u);return true;
+ }catch(e){return false}
+}
+function lev(a,b){const d=Array.from({length:a.length+1},(_,i)=>[i]);for(let j=1;j<=b.length;j++)d[0][j]=j;
+ for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
+ return d[a.length][b.length]}
+function check(word,btn){
+ const out=$("#res"),SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!SR){out.className="res bad";out.textContent="Speech check isn’t supported in this browser. Try Chrome or Safari.";return}
+ const r=new SR();r.lang=accent();r.maxAlternatives=3;
+ btn.classList.add("rec");out.className="res";out.textContent="Listening… say the word.";
+ r.onresult=e=>{
+  const alts=[...e.results[0]].map(a=>a.transcript.toLowerCase().trim());
+  const w=word.toLowerCase();
+  let best=0,heard=alts[0];
+  alts.forEach(a=>{const s=1-lev(a,w)/Math.max(a.length,w.length);if(s>best){best=s;heard=a}});
+  if(best>=.99){out.className="res ok";out.textContent="Spot on! ✅ Heard “"+heard+"”."}
+  else if(best>=.65){out.className="res";out.textContent="Close. I heard “"+heard+"”. Listen again and stress the highlighted part."}
+  else{out.className="res bad";out.textContent="I heard “"+heard+"”. Try again, slower."}
+ };
+ r.onerror=()=>{out.className="res bad";out.textContent="Couldn’t use the microphone. Allow mic access and try again."};
+ r.onend=()=>btn.classList.remove("rec");
+ try{r.start()}catch(e){out.className="res bad";out.textContent="Couldn’t start the microphone."}
+}
+const syl=s=>s.split("-").map(p=>/^[A-Z]+$/.test(p)?`<b class="st">${p.toLowerCase()}</b>`:`<span>${p}</span>`).join("");
+function detail(i,label){
+ const [w,ipa,rs,tip]=W[i];
+ return `<div class="card"><p class="lbl">${label}</p><div class="big">${w}</div><div class="ipa">${ipa}</div>
+ <div class="say" aria-label="Sounds like ${rs}">${syl(rs)}</div>
+ <p class="lbl">Say the highlighted part the loudest.</p>
+ <div class="tip">${tip}</div>
+ <div class="row"><button class="btn p" data-a="say" data-i="${i}">🔊 Listen</button><button class="btn" data-a="slow" data-i="${i}">🐢 Slow</button><button class="btn" data-a="mic" data-i="${i}">🎤 Check me</button><button class="btn" data-a="fav" data-i="${i}">${fav.has(w)?"★ Saved":"☆ Save"}</button>${i>=BASE?`<button class="btn" data-a="del" data-i="${i}">🗑 Remove</button>`:""}</div>
+ <div class="res" id="res" role="status" aria-live="polite"></div></div>`;
+}
+function list(){
+ const f=q.toLowerCase();
+ return W.map((x,i)=>[x,i]).filter(([x])=>!f||x[0].toLowerCase().includes(f)||(f==="saved"&&fav.has(x[0])))
+ .map(([x,i])=>`<div class="item"><button class="w" data-a="pick" data-i="${i}"><b>${x[0]}</b><br><span class="ipa" style="font-size:.95rem">${x[1]}</span></button><button class="btn" data-a="say" data-i="${i}" aria-label="Listen to ${x[0]}">🔊</button><button class="star ${fav.has(x[0])?"on":""}" data-a="favlist" data-i="${i}" aria-label="Save ${x[0]}">${fav.has(x[0])?"★":"☆"}</button></div>`).join("")||`<p class="lbl">No words match. Try another search.</p>`;
+}
+function newQuiz(){
+ const a=Math.floor(Math.random()*W.length),o=new Set([a]);
+ while(o.size<4)o.add(Math.floor(Math.random()*W.length));
+ quiz={a,opts:[...o].sort(()=>Math.random()-.5),done:null};
+}
+const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function respell(ipa){
+ const map=[["tʃ","ch"],["dʒ","j"],["eɪ","ay"],["aɪ","eye"],["oʊ","oh"],["əʊ","oh"],["aʊ","ow"],["ɔɪ","oy"],["ɜːr","ur"],["ɜː","ur"],["ɑːr","ar"],["ɔːr","or"],["iː","ee"],["uː","oo"],["ɑː","ah"],["ɔː","aw"],["ɪ","ih"],["ə","uh"],["ʌ","u"],["æ","a"],["ɑ","ah"],["ɔ","aw"],["ʊ","oo"],["ɛ","e"],["ɒ","o"],["θ","th"],["ð","th"],["ʃ","sh"],["ʒ","zh"],["ŋ","ng"],["ɡ","g"],["ɹ","r"],["ɾ","t"],["ʔ",""],["j","y"],["i","ee"],["u","oo"],["ː",""],["(",""],[")",""]];
+ const conv=t=>{let o="";for(let i=0;i<t.length;){const m=map.find(([k])=>t.startsWith(k,i));if(m){o+=m[1];i+=m[0].length}else{o+=t[i];i++}}return o};
+ return ipa.replace(/[\/\[\]]/g,"").split(/(?=[ˈˌ])/).map(p=>{const st=p[0]==="ˈ",t=conv(p.replace(/^[ˈˌ]/,""));return st?t.toUpperCase():t}).filter(Boolean).join("-");
+}
+async function dictFetch(word){
+ const r=await fetch("https://api.dictionaryapi.dev/api/v2/entries/en/"+encodeURIComponent(word.trim().toLowerCase()));
+ if(!r.ok)return null;
+ const j=await r.json(),e=j&&j[0];if(!e)return null;
+ const ps=e.phonetics||[],ipa=e.phonetic||(ps.find(p=>p.text)||{}).text||"";
+ const pref=accent()==="en-GB"?/-uk/:/-us/;
+ const audio=(ps.find(p=>p.audio&&pref.test(p.audio))||ps.find(p=>p.audio)||{}).audio||"";
+ const defs=(e.meanings||[]).flatMap(m=>m.definitions||[]);
+ const df=defs.find(d=>d.example)||defs[0]||{};
+ return {word:e.word,ipa,respell:ipa?respell(ipa):e.word,tip:"",meaning:df.definition||"",example:df.example||"",audio};
+}
+async function doLookup(){
+ const word=anyWord.trim();if(!word||busy)return;
+ busy=true;look=null;errMsg="";render();
+ try{const r=await dictFetch(word);if(!r)errMsg="Word not found. Check the spelling.";else look=r}
+ catch(e){errMsg="Couldn\u2019t reach the dictionary. Check your internet connection."}
+ busy=false;render();
+}
+function lookCard(){
+ if(busy)return `<div class="card" role="status">Looking it up…</div>`;
+ if(errMsg)return `<div class="card bad" role="status">${errMsg}</div>`;
+ if(!look)return `<p class="lbl">Works for any English word: names of things, science terms, rare words.</p>`;
+ const w=esc(look.word);
+ return `<div class="card"><p class="lbl">Your word</p><div class="big">${w}</div><div class="ipa">${esc(look.ipa)}</div>
+ <div class="say">${syl(esc(look.respell))}</div>
+ <p class="lbl">Say the highlighted part the loudest.</p>
+ ${look.tip?`<div class="tip">${esc(look.tip)}</div>`:""}
+ <p style="margin:14px 0 0">${esc(look.meaning)}</p>${look.example?`<p class="lbl" style="margin-top:6px">“${esc(look.example)}”</p>`:""}
+ <div class="row"><button class="btn p" data-a="sayw" data-w="${w}">🔊 Listen</button><button class="btn" data-a="sloww" data-w="${w}">🐢 Slow</button><button class="btn" data-a="micw" data-w="${w}">🎤 Check me</button>${look.audio?`<button class="btn" data-a="aud" data-u="${esc(look.audio)}">🎧 Real voice</button>`:""}${W.some(x=>x[0].toLowerCase()===String(look.word).toLowerCase())?`<button class="btn" disabled>✓ In library</button>`:`<button class="btn" data-a="addlib">➕ Add to library</button>`}</div>
+ <div class="res" id="res" role="status" aria-live="polite"></div></div>`;
+}
+const dkey=()=>new Date().toLocaleDateString("en-CA");
+async function loadWotd(){
+ const key=dkey();let st=null,hist=[];
+ try{st=JSON.parse(localStorage.getItem("wotd")||"null");hist=JSON.parse(localStorage.getItem("wotdHist")||"[]")}catch(e){}
+ if(st&&st.date===key&&st.entry){wotd=st.entry;render();return}
+ wBusy=true;render();
+ try{
+  for(let n=0;n<8&&!wotd;n++){
+   const rw=await(await fetch("https://random-word-api.herokuapp.com/word?length="+(7+n%4))).json();
+   const e=await dictFetch(rw[0]);
+   if(e&&e.ipa&&e.meaning&&!hist.includes(e.word)&&!W.some(x=>x[0].toLowerCase()===e.word.toLowerCase()))wotd=e;
+  }
+  if(wotd){try{localStorage.setItem("wotd",JSON.stringify({date:key,entry:wotd}));localStorage.setItem("wotdHist",JSON.stringify([...hist,wotd.word].slice(-500)))}catch(e){}}
+ }catch(e){}
+ wBusy=false;render();
+}
+function wotdView(d){
+ if(wBusy)return `<div class="card" role="status">Finding today’s word…</div>`;
+ if(!wotd)return detail(dayIdx(),"Word of the day · "+d);
+ const sb=[look,busy,errMsg];look=wotd;busy=false;errMsg="";
+ const h=lookCard().replace("Your word","Word of the day · "+esc(d));
+ [look,busy,errMsg]=sb;return h;
+}
+function render(){
+ document.querySelectorAll("nav button").forEach(b=>b.setAttribute("aria-selected",b.dataset.tab===tab));
+ const v=$("#view");
+ if(tab==="today"){
+  const d=new Date().toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"});
+  v.innerHTML=wotdView(d)+`<p class="lbl">A brand-new word every day, from any field.</p>`;
+ }else if(tab==="lib"){
+  v.innerHTML=detail(sel,"Selected word")+`<input type="search" id="q" placeholder="Search words, or type “saved”" value="${q}" aria-label="Search words"><div id="list">${list()}</div>`;
+ }else if(tab==="any"){
+  v.innerHTML=`<div class="card"><p class="lbl">Type any English word</p><input type="search" id="aw" placeholder="e.g. serendipity, anemone" value="${esc(anyWord)}" aria-label="Word to look up" autocapitalize="none"><div class="row" style="margin-top:0"><button class="btn p" data-a="look">🔍 Look up</button><button class="btn" data-a="sayw">🔊 Just say it</button></div></div>`+lookCard();
+ }else{
+  if(!quiz)newQuiz();
+  const w=W[quiz.a][0];
+  v.innerHTML=`<div class="card"><p class="score">Score: ${score}/${total}</p><div class="big" style="font-size:1.8rem">Which word did you hear?</div>
+  <div class="row"><button class="btn p" data-a="qsay">🔊 Play word</button></div>
+  <div class="opts">${quiz.opts.map(i=>`<button class="btn" data-a="ans" data-i="${i}">${W[i][0]}</button>`).join("")}</div>
+  <div class="res ${quiz.done===true?"ok":"bad"}" role="status">${quiz.done===null?"":quiz.done?"Correct! 🎉":"Not quite. It was “"+w+"”."}</div>
+  ${quiz.done===null?"":`<div class="row"><button class="btn p" data-a="next">Next word</button></div>`}</div>
+  <p class="lbl">Train your ear: hear the word, then pick the right spelling.</p>`;
+ }
+}
+document.addEventListener("click",e=>{
+ const t=e.target.closest("[data-tab],[data-a]");if(!t)return;
+ if(t.dataset.tab){tab=t.dataset.tab;render();return}
+ const i=+t.dataset.i,a=t.dataset.a;
+ if(a==="say"||a==="slow"){if(!speak(W[i][0],a==="slow"?.5:.9)){const r=$("#res");if(r){r.className="res bad";r.textContent="No audio here. Open this page in Chrome or Safari to hear words."}}}
+ else if(a==="mic")check(W[i][0],t);
+ else if(a==="fav"||a==="favlist"){const w=W[i][0];fav.has(w)?fav.delete(w):fav.add(w);saveFav();
+  if(a==="fav"){t.textContent=fav.has(w)?"★ Saved":"☆ Save"}else{$("#list").innerHTML=list()}}
+ else if(a==="pick"){sel=i;render();window.scrollTo({top:0})}
+ else if(a==="addlib"){const e=tab==="today"?wotd:look;if(e&&!W.some(x=>x[0].toLowerCase()===String(e.word).toLowerCase())){W.push([String(e.word),String(e.ipa||""),String(e.respell||e.word),String(e.tip||"")]);saveCustom()}render()}
+ else if(a==="del"&&i>=BASE){fav.delete(W[i][0]);W.splice(i,1);saveCustom();saveFav();sel=0;render()}
+ else if(a==="aud"){try{new Audio(t.dataset.u).play()}catch(e){}}
+ else if(a==="look")doLookup();
+ else if(a==="sayw"||a==="sloww"){const x=t.dataset.w||anyWord.trim();if(x)speak(x,a==="sloww"?.5:.9)}
+ else if(a==="micw")check(t.dataset.w,t);
+ else if(a==="qsay")speak(W[quiz.a][0],.8);
+ else if(a==="ans"&&quiz.done===null){quiz.done=i===quiz.a;total++;if(quiz.done)score++;render()}
+ else if(a==="next"){newQuiz();render();speak(W[quiz.a][0],.8)}
+});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.id==="aw")doLookup()});
+document.addEventListener("input",e=>{if(e.target.id==="aw")anyWord=e.target.value;if(e.target.id==="q"){q=e.target.value;$("#list").innerHTML=list()}});
+$("#acc").addEventListener("change",()=>{});
+if("speechSynthesis" in window)speechSynthesis.onvoiceschanged=()=>{};
+render();loadWotd();
+</script>
+</body>
+</html>
